@@ -1,0 +1,1857 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Insurance Return Calculator</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 1.2em;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #f0f0f0;
+            overflow-x: auto;
+        }
+
+        .tab {
+            padding: 15px 30px;
+            background: transparent;
+            border: none;
+            border-bottom: 3px solid transparent;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            color: #666;
+            transition: all 0.3s;
+            white-space: nowrap;
+        }
+
+        .tab.active {
+            color: #1e3c72;
+            border-bottom-color: #1e3c72;
+        }
+
+        .tab:hover {
+            color: #1e3c72;
+            background: #f5f5f5;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.5s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .form-section {
+            margin-bottom: 30px;
+        }
+
+        .section-title {
+            font-size: 1.4em;
+            color: #1e3c72;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f0f0f0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #333;
+            font-size: 0.95em;
+        }
+
+        .label-info {
+            font-size: 0.85em;
+            color: #888;
+            font-weight: 400;
+            margin-left: 5px;
+        }
+
+        input, select {
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: all 0.3s;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #1e3c72;
+            box-shadow: 0 0 0 3px rgba(30, 60, 114, 0.1);
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-top: 30px;
+        }
+
+        button {
+            flex: 1;
+            min-width: 150px;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-calculate {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+        }
+
+        .btn-calculate:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(30, 60, 114, 0.4);
+        }
+
+        .btn-excel {
+            background: #217346;
+            color: white;
+        }
+
+        .btn-excel:hover {
+            background: #1a5c37;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(33, 115, 70, 0.4);
+        }
+
+        .btn-pdf {
+            background: #d32f2f;
+            color: white;
+        }
+
+        .btn-pdf:hover {
+            background: #b71c1c;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(211, 47, 47, 0.4);
+        }
+
+        .btn-reset {
+            background: #757575;
+            color: white;
+        }
+
+        .btn-reset:hover {
+            background: #616161;
+            transform: translateY(-2px);
+        }
+
+        .btn-import {
+            background: #5e35b1;
+            color: white;
+        }
+
+        .btn-import:hover {
+            background: #4527a0;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(94, 53, 177, 0.4);
+        }
+
+        .btn-clear {
+            background: #e53935;
+            color: white;
+        }
+
+        .btn-clear:hover {
+            background: #c62828;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(229, 57, 53, 0.4);
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+        }
+
+        .file-input-wrapper input[type=file] {
+            position: absolute;
+            left: -9999px;
+        }
+
+        .auto-save-indicator {
+            position: fixed;
+            bottom: 80px;
+            right: 20px;
+            background: #4caf50;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            font-size: 0.9em;
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: 1000;
+        }
+
+        .auto-save-indicator.show {
+            opacity: 1;
+        }
+
+        .footer {
+            background: #f5f5f5;
+            padding: 20px;
+            text-align: center;
+            border-top: 2px solid #e0e0e0;
+            margin-top: 40px;
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .developer-credit {
+            font-size: 0.95em;
+            color: #555;
+            font-weight: 500;
+        }
+
+        .developer-name {
+            color: #1e3c72;
+            font-weight: 700;
+            font-size: 1.1em;
+        }
+
+        .results {
+            display: none;
+            margin-top: 30px;
+        }
+
+        .results.show {
+            display: block;
+            animation: slideIn 0.5s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .result-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 25px;
+            border-radius: 15px;
+            color: white;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .result-card.green {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        }
+
+        .result-card.orange {
+            background: linear-gradient(135deg, #f2994a 0%, #f2c94c 100%);
+        }
+
+        .result-card.blue {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+        }
+
+        .result-card.red {
+            background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
+        }
+
+        .result-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+            margin-bottom: 8px;
+        }
+
+        .result-value {
+            font-size: 1.8em;
+            font-weight: 700;
+        }
+
+        .chart-container {
+            margin: 30px 0;
+            padding: 30px;
+            background: #f8f9fa;
+            border-radius: 15px;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            margin: 20px 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        th, td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        th {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            font-weight: 600;
+        }
+
+        tr:hover {
+            background: #f5f5f5;
+        }
+
+        .highlight {
+            background: #fff3cd;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 4px solid #ffc107;
+            margin: 20px 0;
+        }
+
+        .highlight h3 {
+            color: #856404;
+            margin-bottom: 10px;
+        }
+
+        .info-box {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #2196f3;
+            margin: 15px 0;
+            font-size: 0.95em;
+        }
+
+        @media (max-width: 768px) {
+            .content {
+                padding: 20px;
+            }
+
+            .header h1 {
+                font-size: 1.8em;
+            }
+
+            .btn-group {
+                flex-direction: column;
+            }
+
+            button {
+                width: 100%;
+            }
+
+            .tabs {
+                flex-wrap: wrap;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 Insurance Return Calculator</h1>
+            <p>Calculate returns on your insurance investments with detailed projections</p>
+        </div>
+
+        <div class="content">
+            <div class="tabs">
+                <button class="tab active" onclick="switchTab('endowment')">Endowment Plans</button>
+                <button class="tab" onclick="switchTab('ulip')">ULIP Plans</button>
+                <button class="tab" onclick="switchTab('moneyback')">Money Back Plans</button>
+                <button class="tab" onclick="switchTab('child')">Child Plans</button>
+            </div>
+
+            <!-- Endowment Plan Tab -->
+            <div id="endowment" class="tab-content active">
+                <div class="info-box">
+                    <strong>Endowment Plans:</strong> Traditional insurance plans that provide both life cover and savings. They pay a lump sum on maturity or on death of the insured.
+                </div>
+
+                <div class="form-section">
+                    <h2 class="section-title">📋 Policy Details</h2>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="end_name">Policy Holder Name</label>
+                            <input type="text" id="end_name" placeholder="Enter your name">
+                        </div>
+                        <div class="form-group">
+                            <label for="end_premium">Annual Premium <span class="label-info">(₹)</span></label>
+                            <input type="number" id="end_premium" placeholder="e.g., 50000" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label for="end_term">Policy Term <span class="label-info">(Years)</span></label>
+                            <input type="number" id="end_term" placeholder="e.g., 20" min="1" max="40">
+                        </div>
+                        <div class="form-group">
+                            <label for="end_sum_assured">Sum Assured <span class="label-info">(₹)</span></label>
+                            <input type="number" id="end_sum_assured" placeholder="e.g., 1000000" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label for="end_bonus_rate">Bonus Rate <span class="label-info">(₹ per ₹1000 p.a.)</span></label>
+                            <input type="number" id="end_bonus_rate" placeholder="e.g., 40" step="0.01" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label for="end_terminal_bonus">Terminal Bonus <span class="label-info">(%)</span></label>
+                            <input type="number" id="end_terminal_bonus" placeholder="e.g., 5" step="0.1" min="0">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="btn-group">
+                    <button class="btn-calculate" onclick="calculateEndowment()">Calculate Returns</button>
+                    <button class="btn-reset" onclick="resetEndowment()">Reset</button>
+                    <div class="file-input-wrapper">
+                        <button class="btn-import">Import from Excel</button>
+                        <input type="file" id="end_importFile" accept=".xlsx,.xls" onchange="importFromExcel('endowment', this.files[0])">
+                    </div>
+                    <button class="btn-clear" onclick="clearAllData('endowment')">Clear All Data</button>
+                    <button class="btn-excel" onclick="exportToExcel('endowment')" id="end_excelBtn" style="display:none;">Export to Excel</button>
+                    <button class="btn-pdf" onclick="exportToPDF('endowment')" id="end_pdfBtn" style="display:none;">Export to PDF</button>
+                </div>
+
+                <div class="results" id="end_results"></div>
+            </div>
+
+            <!-- ULIP Plan Tab -->
+            <div id="ulip" class="tab-content">
+                <div class="info-box">
+                    <strong>ULIP Plans:</strong> Unit Linked Insurance Plans combine insurance with investment. Returns depend on market performance of chosen funds.
+                </div>
+
+                <div class="form-section">
+                    <h2 class="section-title">📋 Policy Details</h2>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="ulip_name">Policy Holder Name</label>
+                            <input type="text" id="ulip_name" placeholder="Enter your name">
+                        </div>
+                        <div class="form-group">
+                            <label for="ulip_premium">Annual Premium <span class="label-info">(₹)</span></label>
+                            <input type="number" id="ulip_premium" placeholder="e.g., 100000" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label for="ulip_term">Policy Term <span class="label-info">(Years)</span></label>
+                            <input type="number" id="ulip_term" placeholder="e.g., 15" min="1" max="40">
+                        </div>
+                        <div class="form-group">
+                            <label for="ulip_payment_term">Premium Payment Term <span class="label-info">(Years)</span></label>
+                            <input type="number" id="ulip_payment_term" placeholder="e.g., 10" min="1" max="40">
+                        </div>
+                        <div class="form-group">
+                            <label for="ulip_expected_return">Expected Return Rate <span class="label-info">(% p.a.)</span></label>
+                            <input type="number" id="ulip_expected_return" placeholder="e.g., 10" step="0.1" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label for="ulip_charges">Total Charges <span class="label-info">(% of premium)</span></label>
+                            <input type="number" id="ulip_charges" placeholder="e.g., 3" step="0.1" min="0" max="100">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="btn-group">
+                    <button class="btn-calculate" onclick="calculateULIP()">Calculate Returns</button>
+                    <button class="btn-reset" onclick="resetULIP()">Reset</button>
+                    <div class="file-input-wrapper">
+                        <button class="btn-import">Import from Excel</button>
+                        <input type="file" id="ulip_importFile" accept=".xlsx,.xls" onchange="importFromExcel('ulip', this.files[0])">
+                    </div>
+                    <button class="btn-clear" onclick="clearAllData('ulip')">Clear All Data</button>
+                    <button class="btn-excel" onclick="exportToExcel('ulip')" id="ulip_excelBtn" style="display:none;">Export to Excel</button>
+                    <button class="btn-pdf" onclick="exportToPDF('ulip')" id="ulip_pdfBtn" style="display:none;">Export to PDF</button>
+                </div>
+
+                <div class="results" id="ulip_results"></div>
+            </div>
+
+            <!-- Money Back Plan Tab -->
+            <div id="moneyback" class="tab-content">
+                <div class="info-box">
+                    <strong>Money Back Plans:</strong> Provide periodic payouts during policy term along with final maturity benefit and bonuses.
+                </div>
+
+                <div class="form-section">
+                    <h2 class="section-title">📋 Policy Details</h2>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="mb_name">Policy Holder Name</label>
+                            <input type="text" id="mb_name" placeholder="Enter your name">
+                        </div>
+                        <div class="form-group">
+                            <label for="mb_premium">Annual Premium <span class="label-info">(₹)</span></label>
+                            <input type="number" id="mb_premium" placeholder="e.g., 60000" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label for="mb_term">Policy Term <span class="label-info">(Years)</span></label>
+                            <input type="number" id="mb_term" placeholder="e.g., 20" min="1" max="40">
+                        </div>
+                        <div class="form-group">
+                            <label for="mb_sum_assured">Sum Assured <span class="label-info">(₹)</span></label>
+                            <input type="number" id="mb_sum_assured" placeholder="e.g., 1000000" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label for="mb_survival_benefit">Survival Benefit <span class="label-info">(% of Sum Assured)</span></label>
+                            <input type="number" id="mb_survival_benefit" placeholder="e.g., 20" step="1" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label for="mb_bonus_rate">Bonus Rate <span class="label-info">(₹ per ₹1000 p.a.)</span></label>
+                            <input type="number" id="mb_bonus_rate" placeholder="e.g., 35" step="0.01" min="0">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="btn-group">
+                    <button class="btn-calculate" onclick="calculateMoneyBack()">Calculate Returns</button>
+                    <button class="btn-reset" onclick="resetMoneyBack()">Reset</button>
+                    <div class="file-input-wrapper">
+                        <button class="btn-import">Import from Excel</button>
+                        <input type="file" id="mb_importFile" accept=".xlsx,.xls" onchange="importFromExcel('moneyback', this.files[0])">
+                    </div>
+                    <button class="btn-clear" onclick="clearAllData('moneyback')">Clear All Data</button>
+                    <button class="btn-excel" onclick="exportToExcel('moneyback')" id="mb_excelBtn" style="display:none;">Export to Excel</button>
+                    <button class="btn-pdf" onclick="exportToPDF('moneyback')" id="mb_pdfBtn" style="display:none;">Export to PDF</button>
+                </div>
+
+                <div class="results" id="mb_results"></div>
+            </div>
+
+            <!-- Child Plan Tab -->
+            <div id="child" class="tab-content">
+                <div class="info-box">
+                    <strong>Child Plans:</strong> Designed to secure your child's future with milestone benefits for education and marriage along with life cover.
+                </div>
+
+                <div class="form-section">
+                    <h2 class="section-title">📋 Policy Details</h2>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="child_name">Parent's Name</label>
+                            <input type="text" id="child_name" placeholder="Enter your name">
+                        </div>
+                        <div class="form-group">
+                            <label for="child_child_name">Child's Name</label>
+                            <input type="text" id="child_child_name" placeholder="Enter child's name">
+                        </div>
+                        <div class="form-group">
+                            <label for="child_premium">Annual Premium <span class="label-info">(₹)</span></label>
+                            <input type="number" id="child_premium" placeholder="e.g., 80000" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label for="child_term">Policy Term <span class="label-info">(Years)</span></label>
+                            <input type="number" id="child_term" placeholder="e.g., 18" min="1" max="25">
+                        </div>
+                        <div class="form-group">
+                            <label for="child_sum_assured">Sum Assured <span class="label-info">(₹)</span></label>
+                            <input type="number" id="child_sum_assured" placeholder="e.g., 2000000" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label for="child_bonus_rate">Bonus Rate <span class="label-info">(₹ per ₹1000 p.a.)</span></label>
+                            <input type="number" id="child_bonus_rate" placeholder="e.g., 45" step="0.01" min="0">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="btn-group">
+                    <button class="btn-calculate" onclick="calculateChild()">Calculate Returns</button>
+                    <button class="btn-reset" onclick="resetChild()">Reset</button>
+                    <div class="file-input-wrapper">
+                        <button class="btn-import">Import from Excel</button>
+                        <input type="file" id="child_importFile" accept=".xlsx,.xls" onchange="importFromExcel('child', this.files[0])">
+                    </div>
+                    <button class="btn-clear" onclick="clearAllData('child')">Clear All Data</button>
+                    <button class="btn-excel" onclick="exportToExcel('child')" id="child_excelBtn" style="display:none;">Export to Excel</button>
+                    <button class="btn-pdf" onclick="exportToPDF('child')" id="child_pdfBtn" style="display:none;">Export to PDF</button>
+                </div>
+
+                <div class="results" id="child_results"></div>
+            </div>
+        </div>
+
+        <div class="auto-save-indicator" id="autoSaveIndicator">
+            ✓ Data Auto-Saved
+        </div>
+
+        <div class="footer">
+            <div class="footer-content">
+                <p class="developer-credit">
+                    Developed and Designed by <span class="developer-name">Shamsudeen EP</span>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentTab = 'endowment';
+        let calculationData = {};
+
+        // LocalStorage Auto-Save Functions
+        function autoSave(planType) {
+            const data = {};
+            const prefix = planType === 'endowment' ? 'end_' : 
+                          planType === 'ulip' ? 'ulip_' : 
+                          planType === 'moneyback' ? 'mb_' : 'child_';
+            
+            const inputs = document.querySelectorAll(`#${planType} input, #${planType} select`);
+            inputs.forEach(input => {
+                if (input.id) {
+                    data[input.id] = input.value;
+                }
+            });
+            
+            localStorage.setItem(`insurance_calc_${planType}`, JSON.stringify(data));
+            showAutoSaveIndicator();
+        }
+
+        function loadFromLocalStorage() {
+            ['endowment', 'ulip', 'moneyback', 'child'].forEach(planType => {
+                const savedData = localStorage.getItem(`insurance_calc_${planType}`);
+                if (savedData) {
+                    const data = JSON.parse(savedData);
+                    Object.keys(data).forEach(key => {
+                        const element = document.getElementById(key);
+                        if (element) {
+                            element.value = data[key];
+                        }
+                    });
+                }
+            });
+        }
+
+        function showAutoSaveIndicator() {
+            const indicator = document.getElementById('autoSaveIndicator');
+            indicator.classList.add('show');
+            setTimeout(() => {
+                indicator.classList.remove('show');
+            }, 2000);
+        }
+
+        function clearAllData(planType) {
+            if (confirm('Are you sure you want to clear all saved data for this plan? This cannot be undone.')) {
+                localStorage.removeItem(`insurance_calc_${planType}`);
+                
+                if (planType === 'endowment') {
+                    resetEndowment();
+                } else if (planType === 'ulip') {
+                    resetULIP();
+                } else if (planType === 'moneyback') {
+                    resetMoneyBack();
+                } else if (planType === 'child') {
+                    resetChild();
+                }
+                
+                alert('All data cleared successfully!');
+            }
+        }
+
+        // Add event listeners for auto-save on input change
+        document.addEventListener('DOMContentLoaded', function() {
+            loadFromLocalStorage();
+            
+            ['endowment', 'ulip', 'moneyback', 'child'].forEach(planType => {
+                const inputs = document.querySelectorAll(`#${planType} input, #${planType} select`);
+                inputs.forEach(input => {
+                    input.addEventListener('change', function() {
+                        autoSave(planType);
+                    });
+                    input.addEventListener('input', function() {
+                        // Debounce auto-save on input
+                        clearTimeout(this.saveTimeout);
+                        this.saveTimeout = setTimeout(() => {
+                            autoSave(planType);
+                        }, 1000);
+                    });
+                });
+            });
+        });
+
+        // Import from Excel Function
+        function importFromExcel(planType, file) {
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+
+                    // Parse the imported data
+                    const importedData = {};
+                    jsonData.forEach(row => {
+                        if (row[0] && row[1] !== undefined) {
+                            const key = row[0].toString().toLowerCase().replace(/\s+/g, '_');
+                            importedData[key] = row[1];
+                        }
+                    });
+
+                    // Map imported data to form fields
+                    if (planType === 'endowment') {
+                        document.getElementById('end_name').value = importedData['policy_holder'] || '';
+                        document.getElementById('end_premium').value = importedData['annual_premium_(₹)'] || '';
+                        document.getElementById('end_term').value = importedData['policy_term_(years)'] || '';
+                        document.getElementById('end_sum_assured').value = importedData['sum_assured_(₹)'] || '';
+                        document.getElementById('end_bonus_rate').value = importedData['bonus_rate_(₹/1000)'] || '';
+                        document.getElementById('end_terminal_bonus').value = importedData['terminal_bonus_(%)'] || '';
+                    } else if (planType === 'ulip') {
+                        document.getElementById('ulip_name').value = importedData['policy_holder'] || '';
+                        document.getElementById('ulip_premium').value = importedData['annual_premium_(₹)'] || '';
+                        document.getElementById('ulip_term').value = importedData['policy_term_(years)'] || '';
+                        document.getElementById('ulip_payment_term').value = importedData['premium_payment_term_(years)'] || '';
+                        document.getElementById('ulip_expected_return').value = importedData['expected_return_(%)'] || '';
+                        document.getElementById('ulip_charges').value = importedData['charges_(%)'] || '';
+                    } else if (planType === 'moneyback') {
+                        document.getElementById('mb_name').value = importedData['policy_holder'] || '';
+                        document.getElementById('mb_premium').value = importedData['annual_premium_(₹)'] || '';
+                        document.getElementById('mb_term').value = importedData['policy_term_(years)'] || '';
+                        document.getElementById('mb_sum_assured').value = importedData['sum_assured_(₹)'] || '';
+                        document.getElementById('mb_survival_benefit').value = importedData['survival_benefit_(%)'] || '';
+                        document.getElementById('mb_bonus_rate').value = importedData['bonus_rate_(₹/1000)'] || '';
+                    } else if (planType === 'child') {
+                        document.getElementById('child_name').value = importedData['parent_name'] || '';
+                        document.getElementById('child_child_name').value = importedData['child_name'] || '';
+                        document.getElementById('child_premium').value = importedData['annual_premium_(₹)'] || '';
+                        document.getElementById('child_term').value = importedData['policy_term_(years)'] || '';
+                        document.getElementById('child_sum_assured').value = importedData['sum_assured_(₹)'] || '';
+                        document.getElementById('child_bonus_rate').value = importedData['bonus_rate_(₹/1000)'] || '';
+                    }
+
+                    autoSave(planType);
+                    alert('Data imported successfully from Excel!');
+                } catch (error) {
+                    alert('Error importing file. Please make sure it\'s a valid Excel file exported from this calculator.');
+                    console.error(error);
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function switchTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            // Show selected tab
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+            currentTab = tabName;
+        }
+
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('en-IN', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }).format(amount);
+        }
+
+        // Endowment Plan Calculation
+        function calculateEndowment() {
+            const name = document.getElementById('end_name').value;
+            const premium = parseFloat(document.getElementById('end_premium').value);
+            const term = parseInt(document.getElementById('end_term').value);
+            const sumAssured = parseFloat(document.getElementById('end_sum_assured').value);
+            const bonusRate = parseFloat(document.getElementById('end_bonus_rate').value);
+            const terminalBonus = parseFloat(document.getElementById('end_terminal_bonus').value);
+
+            if (!name || !premium || !term || !sumAssured || !bonusRate) {
+                alert('Please fill in all required fields');
+                return;
+            }
+
+            const totalPremiumPaid = premium * term;
+            const totalBonus = (sumAssured / 1000) * bonusRate * term;
+            const terminalBonusAmount = sumAssured * (terminalBonus / 100);
+            const maturityAmount = sumAssured + totalBonus + terminalBonusAmount;
+            const returns = maturityAmount - totalPremiumPaid;
+            const returnsPercentage = (returns / totalPremiumPaid) * 100;
+            const irr = calculateIRR(premium, term, maturityAmount);
+
+            calculationData = {
+                type: 'Endowment Plan',
+                name,
+                premium,
+                term,
+                sumAssured,
+                bonusRate,
+                terminalBonus,
+                totalPremiumPaid,
+                totalBonus,
+                terminalBonusAmount,
+                maturityAmount,
+                returns,
+                returnsPercentage,
+                irr
+            };
+
+            displayEndowmentResults();
+        }
+
+        function displayEndowmentResults() {
+            const resultsDiv = document.getElementById('end_results');
+            
+            resultsDiv.innerHTML = `
+                <div class="results-grid">
+                    <div class="result-card blue">
+                        <div class="result-label">Total Premium Paid</div>
+                        <div class="result-value">₹${formatCurrency(calculationData.totalPremiumPaid)}</div>
+                    </div>
+                    <div class="result-card green">
+                        <div class="result-label">Maturity Amount</div>
+                        <div class="result-value">₹${formatCurrency(calculationData.maturityAmount)}</div>
+                    </div>
+                    <div class="result-card orange">
+                        <div class="result-label">Total Returns</div>
+                        <div class="result-value">₹${formatCurrency(calculationData.returns)}</div>
+                    </div>
+                    <div class="result-card">
+                        <div class="result-label">Returns (%)</div>
+                        <div class="result-value">${calculationData.returnsPercentage.toFixed(2)}%</div>
+                    </div>
+                </div>
+
+                <div class="highlight">
+                    <h3>📈 Annual Return Rate (IRR): ${calculationData.irr.toFixed(2)}%</h3>
+                    <p>This is the effective annual return you're getting on your investment.</p>
+                </div>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Benefit Component</th>
+                                <th>Amount (₹)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Sum Assured</td>
+                                <td>₹${formatCurrency(calculationData.sumAssured)}</td>
+                            </tr>
+                            <tr>
+                                <td>Total Bonus (${calculationData.bonusRate}/₹1000 × ${calculationData.term} years)</td>
+                                <td>₹${formatCurrency(calculationData.totalBonus)}</td>
+                            </tr>
+                            <tr>
+                                <td>Terminal Bonus (${calculationData.terminalBonus}%)</td>
+                                <td>₹${formatCurrency(calculationData.terminalBonusAmount)}</td>
+                            </tr>
+                            <tr style="font-weight: bold; background: #f0f0f0;">
+                                <td>Total Maturity Value</td>
+                                <td>₹${formatCurrency(calculationData.maturityAmount)}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="chart-container">
+                    <canvas id="endChart"></canvas>
+                </div>
+            `;
+
+            resultsDiv.classList.add('show');
+            document.getElementById('end_excelBtn').style.display = 'block';
+            document.getElementById('end_pdfBtn').style.display = 'block';
+
+            createChart('endChart', calculationData);
+        }
+
+        // ULIP Plan Calculation
+        function calculateULIP() {
+            const name = document.getElementById('ulip_name').value;
+            const premium = parseFloat(document.getElementById('ulip_premium').value);
+            const term = parseInt(document.getElementById('ulip_term').value);
+            const paymentTerm = parseInt(document.getElementById('ulip_payment_term').value);
+            const expectedReturn = parseFloat(document.getElementById('ulip_expected_return').value);
+            const charges = parseFloat(document.getElementById('ulip_charges').value);
+
+            if (!name || !premium || !term || !paymentTerm || !expectedReturn || !charges) {
+                alert('Please fill in all required fields');
+                return;
+            }
+
+            if (paymentTerm > term) {
+                alert('Premium payment term cannot exceed policy term');
+                return;
+            }
+
+            const totalPremiumPaid = premium * paymentTerm;
+            const netPremium = premium * (1 - charges / 100);
+            
+            // Calculate fund value using compound interest
+            let fundValue = 0;
+            const yearlyData = [];
+            
+            for (let year = 1; year <= term; year++) {
+                if (year <= paymentTerm) {
+                    fundValue = (fundValue + netPremium) * (1 + expectedReturn / 100);
+                } else {
+                    fundValue = fundValue * (1 + expectedReturn / 100);
+                }
+                yearlyData.push({
+                    year,
+                    fundValue,
+                    premiumPaid: Math.min(year, paymentTerm) * premium
+                });
+            }
+
+            const maturityAmount = fundValue;
+            const returns = maturityAmount - totalPremiumPaid;
+            const returnsPercentage = (returns / totalPremiumPaid) * 100;
+            const irr = calculateIRR(premium, paymentTerm, maturityAmount, term);
+
+            calculationData = {
+                type: 'ULIP Plan',
+                name,
+                premium,
+                term,
+                paymentTerm,
+                expectedReturn,
+                charges,
+                totalPremiumPaid,
+                maturityAmount,
+                returns,
+                returnsPercentage,
+                irr,
+                yearlyData
+            };
+
+            displayULIPResults();
+        }
+
+        function displayULIPResults() {
+            const resultsDiv = document.getElementById('ulip_results');
+            
+            resultsDiv.innerHTML = `
+                <div class="results-grid">
+                    <div class="result-card blue">
+                        <div class="result-label">Total Premium Paid</div>
+                        <div class="result-value">₹${formatCurrency(calculationData.totalPremiumPaid)}</div>
+                    </div>
+                    <div class="result-card green">
+                        <div class="result-label">Estimated Maturity Value</div>
+                        <div class="result-value">₹${formatCurrency(calculationData.maturityAmount)}</div>
+                    </div>
+                    <div class="result-card orange">
+                        <div class="result-label">Estimated Gains</div>
+                        <div class="result-value">₹${formatCurrency(calculationData.returns)}</div>
+                    </div>
+                    <div class="result-card">
+                        <div class="result-label">Returns (%)</div>
+                        <div class="result-value">${calculationData.returnsPercentage.toFixed(2)}%</div>
+                    </div>
+                </div>
+
+                <div class="highlight">
+                    <h3>📈 Effective Annual Return (IRR): ${calculationData.irr.toFixed(2)}%</h3>
+                    <p>Based on ${calculationData.expectedReturn}% assumed fund growth rate and ${calculationData.charges}% charges.</p>
+                </div>
+
+                <div class="chart-container">
+                    <canvas id="ulipChart"></canvas>
+                </div>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Year</th>
+                                <th>Premium Paid (₹)</th>
+                                <th>Fund Value (₹)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${calculationData.yearlyData.map(data => `
+                                <tr>
+                                    <td>${data.year}</td>
+                                    <td>₹${formatCurrency(data.premiumPaid)}</td>
+                                    <td>₹${formatCurrency(data.fundValue)}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+
+            resultsDiv.classList.add('show');
+            document.getElementById('ulip_excelBtn').style.display = 'block';
+            document.getElementById('ulip_pdfBtn').style.display = 'block';
+
+            createULIPChart('ulipChart', calculationData);
+        }
+
+        // Money Back Plan Calculation
+        function calculateMoneyBack() {
+            const name = document.getElementById('mb_name').value;
+            const premium = parseFloat(document.getElementById('mb_premium').value);
+            const term = parseInt(document.getElementById('mb_term').value);
+            const sumAssured = parseFloat(document.getElementById('mb_sum_assured').value);
+            const survivalBenefit = parseFloat(document.getElementById('mb_survival_benefit').value);
+            const bonusRate = parseFloat(document.getElementById('mb_bonus_rate').value);
+
+            if (!name || !premium || !term || !sumAssured || !survivalBenefit || !bonusRate) {
+                alert('Please fill in all required fields');
+                return;
+            }
+
+            const totalPremiumPaid = premium * term;
+            
+            // Calculate survival benefits (typically paid at intervals)
+            const survivalPayouts = [];
+            const survivalBenefitAmount = sumAssured * (survivalBenefit / 100);
+            const intervalYears = Math.floor(term / 5); // Typically every 5 years
+            
+            for (let i = 1; i <= 4; i++) {
+                const year = i * intervalYears;
+                if (year < term) {
+                    survivalPayouts.push({
+                        year,
+                        amount: survivalBenefitAmount
+                    });
+                }
+            }
+
+            const totalSurvivalBenefits = survivalPayouts.reduce((sum, p) => sum + p.amount, 0);
+            const totalBonus = (sumAssured / 1000) * bonusRate * term;
+            const maturityBenefit = sumAssured - totalSurvivalBenefits + totalBonus;
+            const totalReturns = totalSurvivalBenefits + maturityBenefit;
+            const netReturns = totalReturns - totalPremiumPaid;
+            const returnsPercentage = (netReturns / totalPremiumPaid) * 100;
+
+            calculationData = {
+                type: 'Money Back Plan',
+                name,
+                premium,
+                term,
+                sumAssured,
+                survivalBenefit,
+                bonusRate,
+                totalPremiumPaid,
+                survivalPayouts,
+                totalSurvivalBenefits,
+                totalBonus,
+                maturityBenefit,
+                totalReturns,
+                netReturns,
+                returnsPercentage
+            };
+
+            displayMoneyBackResults();
+        }
+
+        function displayMoneyBackResults() {
+            const resultsDiv = document.getElementById('mb_results');
+            
+            resultsDiv.innerHTML = `
+                <div class="results-grid">
+                    <div class="result-card blue">
+                        <div class="result-label">Total Premium Paid</div>
+                        <div class="result-value">₹${formatCurrency(calculationData.totalPremiumPaid)}</div>
+                    </div>
+                    <div class="result-card green">
+                        <div class="result-label">Total Returns</div>
+                        <div class="result-value">₹${formatCurrency(calculationData.totalReturns)}</div>
+                    </div>
+                    <div class="result-card orange">
+                        <div class="result-label">Net Gains</div>
+                        <div class="result-value">₹${formatCurrency(calculationData.netReturns)}</div>
+                    </div>
+                    <div class="result-card">
+                        <div class="result-label">Returns (%)</div>
+                        <div class="result-value">${calculationData.returnsPercentage.toFixed(2)}%</div>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <h3 style="margin: 20px 0;">💰 Survival Benefits Schedule</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Year</th>
+                                <th>Payout (₹)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${calculationData.survivalPayouts.map(payout => `
+                                <tr>
+                                    <td>Year ${payout.year}</td>
+                                    <td>₹${formatCurrency(payout.amount)}</td>
+                                </tr>
+                            `).join('')}
+                            <tr style="font-weight: bold; background: #f0f0f0;">
+                                <td>Total Survival Benefits</td>
+                                <td>₹${formatCurrency(calculationData.totalSurvivalBenefits)}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="table-container">
+                    <h3 style="margin: 20px 0;">🎯 Maturity Benefits</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Component</th>
+                                <th>Amount (₹)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Remaining Sum Assured</td>
+                                <td>₹${formatCurrency(calculationData.sumAssured - calculationData.totalSurvivalBenefits)}</td>
+                            </tr>
+                            <tr>
+                                <td>Total Bonus</td>
+                                <td>₹${formatCurrency(calculationData.totalBonus)}</td>
+                            </tr>
+                            <tr style="font-weight: bold; background: #f0f0f0;">
+                                <td>Maturity Benefit</td>
+                                <td>₹${formatCurrency(calculationData.maturityBenefit)}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            `;
+
+            resultsDiv.classList.add('show');
+            document.getElementById('mb_excelBtn').style.display = 'block';
+            document.getElementById('mb_pdfBtn').style.display = 'block';
+        }
+
+        // Child Plan Calculation
+        function calculateChild() {
+            const name = document.getElementById('child_name').value;
+            const childName = document.getElementById('child_child_name').value;
+            const premium = parseFloat(document.getElementById('child_premium').value);
+            const term = parseInt(document.getElementById('child_term').value);
+            const sumAssured = parseFloat(document.getElementById('child_sum_assured').value);
+            const bonusRate = parseFloat(document.getElementById('child_bonus_rate').value);
+
+            if (!name || !childName || !premium || !term || !sumAssured || !bonusRate) {
+                alert('Please fill in all required fields');
+                return;
+            }
+
+            const totalPremiumPaid = premium * term;
+            const totalBonus = (sumAssured / 1000) * bonusRate * term;
+            
+            // Calculate milestone benefits
+            const milestoneBenefits = [];
+            const educationMilestone1 = { year: Math.floor(term * 0.6), amount: sumAssured * 0.15, purpose: 'Higher Education' };
+            const educationMilestone2 = { year: Math.floor(term * 0.8), amount: sumAssured * 0.15, purpose: 'Professional Course' };
+            const marriageMilestone = { year: term, amount: sumAssured * 0.1, purpose: 'Marriage' };
+            
+            milestoneBenefits.push(educationMilestone1, educationMilestone2, marriageMilestone);
+            const totalMilestoneBenefits = milestoneBenefits.reduce((sum, m) => sum + m.amount, 0);
+            
+            const maturityBenefit = sumAssured + totalBonus - totalMilestoneBenefits;
+            const totalReturns = totalMilestoneBenefits + maturityBenefit;
+            const netReturns = totalReturns - totalPremiumPaid;
+            const returnsPercentage = (netReturns / totalPremiumPaid) * 100;
+
+            calculationData = {
+                type: 'Child Plan',
+                name,
+                childName,
+                premium,
+                term,
+                sumAssured,
+                bonusRate,
+                totalPremiumPaid,
+                milestoneBenefits,
+                totalMilestoneBenefits,
+                totalBonus,
+                maturityBenefit,
+                totalReturns,
+                netReturns,
+                returnsPercentage
+            };
+
+            displayChildResults();
+        }
+
+        function displayChildResults() {
+            const resultsDiv = document.getElementById('child_results');
+            
+            resultsDiv.innerHTML = `
+                <div class="results-grid">
+                    <div class="result-card blue">
+                        <div class="result-label">Total Premium Paid</div>
+                        <div class="result-value">₹${formatCurrency(calculationData.totalPremiumPaid)}</div>
+                    </div>
+                    <div class="result-card green">
+                        <div class="result-label">Total Benefits</div>
+                        <div class="result-value">₹${formatCurrency(calculationData.totalReturns)}</div>
+                    </div>
+                    <div class="result-card orange">
+                        <div class="result-label">Net Gains</div>
+                        <div class="result-value">₹${formatCurrency(calculationData.netReturns)}</div>
+                    </div>
+                    <div class="result-card">
+                        <div class="result-label">Returns (%)</div>
+                        <div class="result-value">${calculationData.returnsPercentage.toFixed(2)}%</div>
+                    </div>
+                </div>
+
+                <div class="highlight">
+                    <h3>👶 Securing ${calculationData.childName}'s Future</h3>
+                    <p>This plan provides milestone benefits for key life events along with maturity benefits.</p>
+                </div>
+
+                <div class="table-container">
+                    <h3 style="margin: 20px 0;">🎓 Milestone Benefits</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Year</th>
+                                <th>Purpose</th>
+                                <th>Amount (₹)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${calculationData.milestoneBenefits.map(milestone => `
+                                <tr>
+                                    <td>Year ${milestone.year}</td>
+                                    <td>${milestone.purpose}</td>
+                                    <td>₹${formatCurrency(milestone.amount)}</td>
+                                </tr>
+                            `).join('')}
+                            <tr style="font-weight: bold; background: #f0f0f0;">
+                                <td colspan="2">Total Milestone Benefits</td>
+                                <td>₹${formatCurrency(calculationData.totalMilestoneBenefits)}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="table-container">
+                    <h3 style="margin: 20px 0;">💎 Final Maturity Benefits</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Component</th>
+                                <th>Amount (₹)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Sum Assured (Remaining)</td>
+                                <td>₹${formatCurrency(calculationData.sumAssured - calculationData.totalMilestoneBenefits)}</td>
+                            </tr>
+                            <tr>
+                                <td>Total Bonus</td>
+                                <td>₹${formatCurrency(calculationData.totalBonus)}</td>
+                            </tr>
+                            <tr style="font-weight: bold; background: #f0f0f0;">
+                                <td>Maturity Amount</td>
+                                <td>₹${formatCurrency(calculationData.maturityBenefit)}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            `;
+
+            resultsDiv.classList.add('show');
+            document.getElementById('child_excelBtn').style.display = 'block';
+            document.getElementById('child_pdfBtn').style.display = 'block';
+        }
+
+        // Helper function to calculate IRR
+        function calculateIRR(premium, paymentTerm, maturityAmount, totalTerm = null) {
+            const term = totalTerm || paymentTerm;
+            
+            // Simple IRR approximation using Newton-Raphson method
+            let rate = 0.1; // Initial guess
+            const tolerance = 0.0001;
+            const maxIterations = 100;
+            
+            for (let i = 0; i < maxIterations; i++) {
+                let npv = -maturityAmount;
+                let dnpv = 0;
+                
+                for (let year = 1; year <= paymentTerm; year++) {
+                    npv += premium / Math.pow(1 + rate, term - year + 1);
+                    dnpv -= (term - year + 1) * premium / Math.pow(1 + rate, term - year + 2);
+                }
+                
+                if (Math.abs(npv) < tolerance) break;
+                
+                rate = rate - npv / dnpv;
+            }
+            
+            return rate * 100;
+        }
+
+        // Create chart for Endowment/Money Back/Child plans
+        function createChart(canvasId, data) {
+            const ctx = document.getElementById(canvasId).getContext('2d');
+            
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Premium Paid', 'Maturity Value', 'Net Returns'],
+                    datasets: [{
+                        label: 'Amount (₹)',
+                        data: [
+                            data.totalPremiumPaid,
+                            data.maturityAmount || data.totalReturns,
+                            data.returns || data.netReturns
+                        ],
+                        backgroundColor: [
+                            'rgba(30, 60, 114, 0.8)',
+                            'rgba(17, 153, 142, 0.8)',
+                            'rgba(242, 153, 74, 0.8)'
+                        ],
+                        borderColor: [
+                            'rgba(30, 60, 114, 1)',
+                            'rgba(17, 153, 142, 1)',
+                            'rgba(242, 153, 74, 1)'
+                        ],
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        title: {
+                            display: true,
+                            text: 'Investment Returns Overview',
+                            font: {
+                                size: 16
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return '₹' + (value/100000).toFixed(0) + 'L';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Create chart for ULIP
+        function createULIPChart(canvasId, data) {
+            const ctx = document.getElementById(canvasId).getContext('2d');
+            
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.yearlyData.map(d => 'Year ' + d.year),
+                    datasets: [
+                        {
+                            label: 'Premium Paid',
+                            data: data.yearlyData.map(d => d.premiumPaid),
+                            borderColor: 'rgba(30, 60, 114, 1)',
+                            backgroundColor: 'rgba(30, 60, 114, 0.1)',
+                            tension: 0.4
+                        },
+                        {
+                            label: 'Fund Value',
+                            data: data.yearlyData.map(d => d.fundValue),
+                            borderColor: 'rgba(17, 153, 142, 1)',
+                            backgroundColor: 'rgba(17, 153, 142, 0.1)',
+                            tension: 0.4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        },
+                        title: {
+                            display: true,
+                            text: 'Fund Growth Projection',
+                            font: {
+                                size: 16
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return '₹' + (value/100000).toFixed(0) + 'L';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Export to Excel
+        function exportToExcel(planType) {
+            const data = calculationData;
+            let excelData = [];
+
+            excelData.push(['Insurance Return Calculator Report']);
+            excelData.push(['Plan Type', data.type]);
+            excelData.push(['']);
+
+            if (planType === 'endowment') {
+                excelData.push(['Policy Holder', data.name]);
+                excelData.push(['Annual Premium (₹)', data.premium]);
+                excelData.push(['Policy Term (Years)', data.term]);
+                excelData.push(['Sum Assured (₹)', data.sumAssured]);
+                excelData.push(['Bonus Rate (₹/1000)', data.bonusRate]);
+                excelData.push(['Terminal Bonus (%)', data.terminalBonus]);
+                excelData.push(['']);
+                excelData.push(['RETURNS SUMMARY']);
+                excelData.push(['Total Premium Paid (₹)', data.totalPremiumPaid.toFixed(2)]);
+                excelData.push(['Total Bonus (₹)', data.totalBonus.toFixed(2)]);
+                excelData.push(['Terminal Bonus (₹)', data.terminalBonusAmount.toFixed(2)]);
+                excelData.push(['Maturity Amount (₹)', data.maturityAmount.toFixed(2)]);
+                excelData.push(['Net Returns (₹)', data.returns.toFixed(2)]);
+                excelData.push(['Returns (%)', data.returnsPercentage.toFixed(2) + '%']);
+                excelData.push(['IRR (%)', data.irr.toFixed(2) + '%']);
+            } else if (planType === 'ulip') {
+                excelData.push(['Policy Holder', data.name]);
+                excelData.push(['Annual Premium (₹)', data.premium]);
+                excelData.push(['Policy Term (Years)', data.term]);
+                excelData.push(['Premium Payment Term (Years)', data.paymentTerm]);
+                excelData.push(['Expected Return (%)', data.expectedReturn]);
+                excelData.push(['Charges (%)', data.charges]);
+                excelData.push(['']);
+                excelData.push(['RETURNS SUMMARY']);
+                excelData.push(['Total Premium Paid (₹)', data.totalPremiumPaid.toFixed(2)]);
+                excelData.push(['Estimated Maturity Value (₹)', data.maturityAmount.toFixed(2)]);
+                excelData.push(['Estimated Gains (₹)', data.returns.toFixed(2)]);
+                excelData.push(['Returns (%)', data.returnsPercentage.toFixed(2) + '%']);
+                excelData.push(['Effective IRR (%)', data.irr.toFixed(2) + '%']);
+                excelData.push(['']);
+                excelData.push(['YEAR-WISE PROJECTION']);
+                excelData.push(['Year', 'Premium Paid (₹)', 'Fund Value (₹)']);
+                data.yearlyData.forEach(d => {
+                    excelData.push([d.year, d.premiumPaid.toFixed(2), d.fundValue.toFixed(2)]);
+                });
+            } else if (planType === 'moneyback') {
+                excelData.push(['Policy Holder', data.name]);
+                excelData.push(['Annual Premium (₹)', data.premium]);
+                excelData.push(['Policy Term (Years)', data.term]);
+                excelData.push(['Sum Assured (₹)', data.sumAssured]);
+                excelData.push(['Survival Benefit (%)', data.survivalBenefit]);
+                excelData.push(['Bonus Rate (₹/1000)', data.bonusRate]);
+                excelData.push(['']);
+                excelData.push(['SURVIVAL BENEFITS']);
+                excelData.push(['Year', 'Amount (₹)']);
+                data.survivalPayouts.forEach(p => {
+                    excelData.push([p.year, p.amount.toFixed(2)]);
+                });
+                excelData.push(['Total Survival Benefits', data.totalSurvivalBenefits.toFixed(2)]);
+                excelData.push(['']);
+                excelData.push(['MATURITY BENEFITS']);
+                excelData.push(['Remaining Sum Assured (₹)', (data.sumAssured - data.totalSurvivalBenefits).toFixed(2)]);
+                excelData.push(['Total Bonus (₹)', data.totalBonus.toFixed(2)]);
+                excelData.push(['Maturity Benefit (₹)', data.maturityBenefit.toFixed(2)]);
+                excelData.push(['']);
+                excelData.push(['TOTAL RETURNS']);
+                excelData.push(['Total Premium Paid (₹)', data.totalPremiumPaid.toFixed(2)]);
+                excelData.push(['Total Returns (₹)', data.totalReturns.toFixed(2)]);
+                excelData.push(['Net Gains (₹)', data.netReturns.toFixed(2)]);
+                excelData.push(['Returns (%)', data.returnsPercentage.toFixed(2) + '%']);
+            } else if (planType === 'child') {
+                excelData.push(['Parent Name', data.name]);
+                excelData.push(['Child Name', data.childName]);
+                excelData.push(['Annual Premium (₹)', data.premium]);
+                excelData.push(['Policy Term (Years)', data.term]);
+                excelData.push(['Sum Assured (₹)', data.sumAssured]);
+                excelData.push(['Bonus Rate (₹/1000)', data.bonusRate]);
+                excelData.push(['']);
+                excelData.push(['MILESTONE BENEFITS']);
+                excelData.push(['Year', 'Purpose', 'Amount (₹)']);
+                data.milestoneBenefits.forEach(m => {
+                    excelData.push([m.year, m.purpose, m.amount.toFixed(2)]);
+                });
+                excelData.push(['', 'Total Milestone Benefits', data.totalMilestoneBenefits.toFixed(2)]);
+                excelData.push(['']);
+                excelData.push(['MATURITY BENEFITS']);
+                excelData.push(['Remaining Sum Assured (₹)', (data.sumAssured - data.totalMilestoneBenefits).toFixed(2)]);
+                excelData.push(['Total Bonus (₹)', data.totalBonus.toFixed(2)]);
+                excelData.push(['Maturity Amount (₹)', data.maturityBenefit.toFixed(2)]);
+                excelData.push(['']);
+                excelData.push(['TOTAL RETURNS']);
+                excelData.push(['Total Premium Paid (₹)', data.totalPremiumPaid.toFixed(2)]);
+                excelData.push(['Total Benefits (₹)', data.totalReturns.toFixed(2)]);
+                excelData.push(['Net Gains (₹)', data.netReturns.toFixed(2)]);
+                excelData.push(['Returns (%)', data.returnsPercentage.toFixed(2) + '%']);
+            }
+
+            const ws = XLSX.utils.aoa_to_sheet(excelData);
+            ws['!cols'] = [{ wch: 35 }, { wch: 20 }, { wch: 20 }];
+
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Insurance Returns');
+            
+            XLSX.writeFile(wb, `Insurance_Returns_${data.type.replace(/\s+/g, '_')}_${Date.now()}.xlsx`);
+        }
+
+        // Export to PDF with improved readability
+        function exportToPDF(planType) {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            const data = calculationData;
+            let yPos = 20;
+
+            // Helper function to add text with word wrap
+            function addText(text, x, y, maxWidth = 170) {
+                const lines = doc.splitTextToSize(text, maxWidth);
+                doc.text(lines, x, y);
+                return y + (lines.length * 7);
+            }
+
+            // Helper function to add a section
+            function addSection(title, items, startY) {
+                let y = startY;
+                
+                // Section title with background
+                doc.setFillColor(30, 60, 114);
+                doc.rect(15, y - 5, 180, 10, 'F');
+                doc.setTextColor(255, 255, 255);
+                doc.setFontSize(13);
+                doc.setFont(undefined, 'bold');
+                doc.text(title, 20, y + 2);
+                y += 12;
+                
+                // Section content
+                doc.setTextColor(0, 0, 0);
+                doc.setFontSize(11);
+                doc.setFont(undefined, 'normal');
+                
+                items.forEach(item => {
+                    if (item.bold) {
+                        doc.setFont(undefined, 'bold');
+                    }
+                    doc.text(item.label + ':', 20, y);
+                    doc.text(item.value, 120, y);
+                    if (item.bold) {
+                        doc.setFont(undefined, 'normal');
+                    }
+                    y += 7;
+                });
+                
+                return y + 5;
+            }
+
+            // Title
+            doc.setFontSize(22);
+            doc.setTextColor(30, 60, 114);
+            doc.setFont(undefined, 'bold');
+            doc.text('Insurance Return Calculator', 105, yPos, { align: 'center' });
+            yPos += 8;
+            
+            doc.setFontSize(14);
+            doc.setTextColor(100, 100, 100);
+            doc.setFont(undefined, 'normal');
+            doc.text(data.type, 105, yPos, { align: 'center' });
+            yPos += 12;
+
+            // Add a separator line
+            doc.setDrawColor(200, 200, 200);
+            doc.line(15, yPos, 195, yPos);
+            yPos += 10;
+
+            if (planType === 'endowment') {
+                yPos = addSection('Policy Information', [
+                    { label: 'Policy Holder Name', value: data.name },
+                    { label: 'Annual Premium', value: '₹' + formatCurrency(data.premium) },
+                    { label: 'Policy Term', value: data.term + ' Years' },
+                    { label: 'Sum Assured', value: '₹' + formatCurrency(data.sumAssured) },
+                    { label: 'Bonus Rate', value: '₹' + data.bonusRate + ' per ₹1000 p.a.' },
+                    { label: 'Terminal Bonus', value: data.terminalBonus + '%' }
+                ], yPos);
+
+                yPos = addSection('Premium & Benefits Breakdown', [
+                    { label: 'Total Premium Paid', value: '₹' + formatCurrency(data.totalPremiumPaid) },
+                    { label: 'Sum Assured', value: '₹' + formatCurrency(data.sumAssured) },
+                    { label: 'Total Bonus Accumulated', value: '₹' + formatCurrency(data.totalBonus) },
+                    { label: 'Terminal Bonus Amount', value: '₹' + formatCurrency(data.terminalBonusAmount) }
+                ], yPos);
+
+                yPos = addSection('Returns Summary', [
+                    { label: 'Maturity Amount', value: '₹' + formatCurrency(data.maturityAmount), bold: true },
+                    { label: 'Net Returns', value: '₹' + formatCurrency(data.returns), bold: true },
+                    { label: 'Return Percentage', value: data.returnsPercentage.toFixed(2) + '%', bold: true },
+                    { label: 'Annual Return Rate (IRR)', value: data.irr.toFixed(2) + '%', bold: true }
+                ], yPos);
+
+            } else if (planType === 'ulip') {
+                yPos = addSection('Policy Information', [
+                    { label: 'Policy Holder Name', value: data.name },
+                    { label: 'Annual Premium', value: '₹' + formatCurrency(data.premium) },
+                    { label: 'Policy Term', value: data.term + ' Years' },
+                    { label: 'Premium Payment Term', value: data.paymentTerm + ' Years' },
+                    { label: 'Expected Return Rate', value: data.expectedReturn + '% p.a.' },
+                    { label: 'Total Charges', value: data.charges + '%' }
+                ], yPos);
+
+                yPos = addSection('Investment Summary', [
+                    { label: 'Total Premium Paid', value: '₹' + formatCurrency(data.totalPremiumPaid) },
+                    { label: 'Net Investment (After Charges)', value: '₹' + formatCurrency(data.totalPremiumPaid * (1 - data.charges/100)) }
+                ], yPos);
+
+                yPos = addSection('Returns Summary', [
+                    { label: 'Estimated Maturity Value', value: '₹' + formatCurrency(data.maturityAmount), bold: true },
+                    { label: 'Estimated Gains', value: '₹' + formatCurrency(data.returns), bold: true },
+                    { label: 'Return Percentage', value: data.returnsPercentage.toFixed(2) + '%', bold: true },
+                    { label: 'Effective Annual Return (IRR)', value: data.irr.toFixed(2) + '%', bold: true }
+                ], yPos);
+
+                // Add year-wise projection table on new page
+                doc.addPage();
+                yPos = 20;
+                doc.setFontSize(14);
+                doc.setTextColor(30, 60, 114);
+                doc.setFont(undefined, 'bold');
+                doc.text('Year-wise Fund Growth Projection', 20, yPos);
+                yPos += 10;
+
+                // Table headers
+                doc.setFillColor(30, 60, 114);
+                doc.rect(20, yPos, 170, 10, 'F');
+                doc.setTextColor(255, 255, 255);
+                doc.setFontSize(11);
+                doc.text('Year', 30, yPos + 7);
+                doc.text('Premium Paid', 80, yPos + 7);
+                doc.text('Fund Value', 140, yPos + 7);
+                yPos += 12;
+
+                // Table rows
+                doc.setTextColor(0, 0, 0);
+                doc.setFont(undefined, 'normal');
+                let rowColor = true;
+                data.yearlyData.forEach(row => {
+                    if (yPos > 270) {
+                        doc.addPage();
+                        yPos = 20;
+                    }
+                    
+                    if (rowColor) {
+                        doc.setFillColor(245, 245, 245);
+                        doc.rect(20, yPos - 5, 170, 8, 'F');
+                    }
+                    rowColor = !rowColor;
+                    
+                    doc.text(row.year.toString(), 30, yPos);
+                    doc.text('₹' + formatCurrency(row.premiumPaid), 80, yPos);
+                    doc.text('₹' + formatCurrency(row.fundValue), 140, yPos);
+                    yPos += 8;
+                });
+
+            } else if (planType === 'moneyback') {
+                yPos = addSection('Policy Information', [
+                    { label: 'Policy Holder Name', value: data.name },
+                    { label: 'Annual Premium', value: '₹' + formatCurrency(data.premium) },
+                    { label: 'Policy Term', value: data.term + ' Years' },
+                    { label: 'Sum Assured', value: '₹' + formatCurrency(data.sumAssured) },
+                    { label: 'Survival Benefit Rate', value: data.survivalBenefit + '% of Sum Assured' },
+                    { label: 'Bonus Rate', value: '₹' + data.bonusRate + ' per ₹1000 p.a.' }
+                ], yPos);
+
+                yPos = addSection('Survival Benefits Schedule', 
+                    data.survivalPayouts.map(p => ({
+                        label: 'Year ' + p.year,
+                        value: '₹' + formatCurrency(p.amount)
+                    })).concat([
+                        { label: 'Total Survival Benefits', value: '₹' + formatCurrency(data.totalSurvivalBenefits), bold: true }
+                    ]), yPos);
+
+                yPos = addSection('Maturity Benefits', [
+                    { label: 'Remaining Sum Assured', value: '₹' + formatCurrency(data.sumAssured - data.totalSurvivalBenefits) },
+                    { label: 'Total Bonus', value: '₹' + formatCurrency(data.totalBonus) },
+                    { label: 'Maturity Benefit', value: '₹' + formatCurrency(data.maturityBenefit), bold: true }
+                ], yPos);
+
+                yPos = addSection('Total Returns Summary', [
+                    { label: 'Total Premium Paid', value: '₹' + formatCurrency(data.totalPremiumPaid) },
+                    { label: 'Total Benefits Received', value: '₹' + formatCurrency(data.totalReturns), bold: true },
+                    { label: 'Net Gains', value: '₹' + formatCurrency(data.netReturns), bold: true },
+                    { label: 'Return Percentage', value: data.returnsPercentage.toFixed(2) + '%', bold: true }
+                ], yPos);
+
+            } else if (planType === 'child') {
+                yPos = addSection('Policy Information', [
+                    { label: 'Parent Name', value: data.name },
+                    { label: 'Child Name', value: data.childName },
+                    { label: 'Annual Premium', value: '₹' + formatCurrency(data.premium) },
+                    { label: 'Policy Term', value: data.term + ' Years' },
+                    { label: 'Sum Assured', value: '₹' + formatCurrency(data.sumAssured) },
+                    { label: 'Bonus Rate', value: '₹' + data.bonusRate + ' per ₹1000 p.a.' }
+                ], yPos);
+
+                yPos = addSection('Milestone Benefits Schedule', 
+                    data.milestoneBenefits.map(m => ({
+                        label: 'Year ' + m.year + ' - ' + m.purpose,
+                        value: '₹' + formatCurrency(m.amount)
+                    })).concat([
+                        { label: 'Total Milestone Benefits', value: '₹' + formatCurrency(data.totalMilestoneBenefits), bold: true }
+                    ]), yPos);
+
+                yPos = addSection('Final Maturity Benefits', [
+                    { label: 'Remaining Sum Assured', value: '₹' + formatCurrency(data.sumAssured - data.totalMilestoneBenefits) },
+                    { label: 'Total Bonus', value: '₹' + formatCurrency(data.totalBonus) },
+                    { label: 'Maturity Amount', value: '₹' + formatCurrency(data.maturityBenefit), bold: true }
+                ], yPos);
+
+                yPos = addSection('Total Returns Summary', [
+                    { label: 'Total Premium Paid', value: '₹' + formatCurrency(data.totalPremiumPaid) },
+                    { label: 'Total Benefits', value: '₹' + formatCurrency(data.totalReturns), bold: true },
+                    { label: 'Net Gains', value: '₹' + formatCurrency(data.netReturns), bold: true },
+                    { label: 'Return Percentage', value: data.returnsPercentage.toFixed(2) + '%', bold: true }
+                ], yPos);
+            }
+
+            // Footer on all pages
+            const pageCount = doc.internal.getNumberOfPages();
+            for (let i = 1; i <= pageCount; i++) {
+                doc.setPage(i);
+                doc.setFontSize(9);
+                doc.setTextColor(150, 150, 150);
+                doc.text(`Generated on ${new Date().toLocaleDateString('en-IN')} at ${new Date().toLocaleTimeString('en-IN')}`, 105, 285, { align: 'center' });
+                doc.text(`Page ${i} of ${pageCount}`, 105, 290, { align: 'center' });
+                doc.setFontSize(8);
+                doc.text('Developed and Designed by Shamsudeen EP', 105, 295, { align: 'center' });
+            }
+
+            doc.save(`Insurance_Returns_${data.type.replace(/\s+/g, '_')}_${Date.now()}.pdf`);
+        }
+
+        // Reset functions
+        function resetEndowment() {
+            document.querySelectorAll('#endowment input').forEach(input => input.value = '');
+            document.getElementById('end_results').classList.remove('show');
+            document.getElementById('end_excelBtn').style.display = 'none';
+            document.getElementById('end_pdfBtn').style.display = 'none';
+        }
+
+        function resetULIP() {
+            document.querySelectorAll('#ulip input').forEach(input => input.value = '');
+            document.getElementById('ulip_results').classList.remove('show');
+            document.getElementById('ulip_excelBtn').style.display = 'none';
+            document.getElementById('ulip_pdfBtn').style.display = 'none';
+        }
+
+        function resetMoneyBack() {
+            document.querySelectorAll('#moneyback input').forEach(input => input.value = '');
+            document.getElementById('mb_results').classList.remove('show');
+            document.getElementById('mb_excelBtn').style.display = 'none';
+            document.getElementById('mb_pdfBtn').style.display = 'none';
+        }
+
+        function resetChild() {
+            document.querySelectorAll('#child input').forEach(input => input.value = '');
+            document.getElementById('child_results').classList.remove('show');
+            document.getElementById('child_excelBtn').style.display = 'none';
+            document.getElementById('child_pdfBtn').style.display = 'none';
+        }
+    </script>
+</body>
+</html>
